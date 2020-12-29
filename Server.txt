@@ -1,0 +1,63 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+namespace SERVER
+{
+    class Program
+    {
+        static Socket sck, acc;
+        static int port = 9000;
+        static IPAddress ip;
+        static Thread rec;
+
+      
+        static void recv()
+        {
+            while (true)
+            {
+                Thread.Sleep(500);
+                byte[] buffer = new byte[1500];
+                int rec = sck.Receive(buffer, 0, buffer.Length, 0);
+                Array.Resize(ref buffer, rec);
+                string msg = Encoding.Default.GetString(buffer);
+                if (msg == "1") { Console.BackgroundColor = ConsoleColor.Green; }
+                
+                Console.WriteLine(msg);
+            }
+
+        }
+        static void Main(string[] args)
+        {
+           
+            rec = new Thread(recv);
+          
+            Console.WriteLine("please enter your name");
+            string name = Console.ReadLine();
+            Console.WriteLine("please enter server ip");
+            ip = IPAddress.Parse(Console.ReadLine());
+            Console.WriteLine("please enter your port");
+            string inport = Console.ReadLine();
+            try { port = Convert.ToInt32(port); } catch { port = 9000; }
+            sck = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            sck.Connect(new IPEndPoint(ip, port));
+            rec.Start();
+            byte[] conmsg = Encoding.Default.GetBytes("client connected successfully");
+            sck.Send(conmsg, 0, conmsg.Length, 0);
+
+           
+            while (sck.Connected)
+            {
+                byte[] sdata = Encoding.Default.GetBytes(Console.ReadLine());
+                sck.Send(sdata, 0, sdata.Length, 0);
+            }
+
+
+
+        }
+    }
+}
